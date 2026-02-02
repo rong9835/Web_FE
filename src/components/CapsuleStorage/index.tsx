@@ -11,13 +11,11 @@ import { CapsuleDetailModal } from './components/CapsuleDetailModal';
 import type { CapsuleTabType } from './types';
 import { useMyCapsules } from '@/commons/apis/me/capsules/hooks';
 import { useCapsuleDetail } from '@/commons/apis/timecapsules/hooks';
-import { useAuthState } from '@/commons/hooks/useAuth';
 import { Spinner } from '@/commons/components/spinner';
 import styles from './styles.module.css';
 
 export function CapsuleStorage() {
   const router = useRouter();
-  const { user } = useAuthState();
   const {
     waitingRooms,
     openedCapsules,
