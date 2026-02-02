@@ -1,0 +1,1 @@
+export { useCapsuleStorage } from './useCapsuleStorage';

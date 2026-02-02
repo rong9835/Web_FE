@@ -3,8 +3,8 @@
 import React from 'react';
 import { RiTimeLine, RiCalendarLine, RiCalendarCheckLine } from '@remixicon/react';
 import { formatCapsuleDate, formatDday } from '@/commons/utils/date';
-import type { LockedCapsuleListProps } from '../types';
-import styles from './LockedCapsuleList.module.css';
+import type { LockedCapsuleListProps } from './types';
+import styles from './styles.module.css';
 
 export function LockedCapsuleList({ capsules }: LockedCapsuleListProps) {
   if (capsules.length === 0) {

@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import type { CapsuleTabsProps, CapsuleTabType } from '../types';
-import styles from './CapsuleTabs.module.css';
+import type { CapsuleTabsProps, CapsuleTabType } from './types';
+import styles from './styles.module.css';
 
 export function CapsuleTabs({
   activeTab,

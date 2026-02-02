@@ -13,28 +13,27 @@ import type {
   SlotContentImage,
   SlotContentVideo,
   SlotContentAudio,
-} from '@/commons/apis/me/capsules/types';
+} from '@/commons/apis/capsules/my-capsules/types';
 
-/** 서버 snake_case 응답 (예시) */
-interface SnakeSlotAuthor {
-  id: string;
-  name: string;
-  emoji: string;
-  profile_img?: string;
-}
-
-interface SnakeSlotContent {
-  text?: string;
-  images?: Array<{ id: string; url: string; thumbnail_url?: string }>;
-  video?: { id: string; url: string; thumbnail_url: string };
-  audio?: { id: string; title: string; url: string };
+/** 서버 snake_case 응답 (실제 구조) */
+interface SnakeMediaItem {
+  media_id: string;
+  object_key: string;
 }
 
 interface SnakeSlot {
   slot_id: string;
-  author?: SnakeSlotAuthor | null;
-  is_written: boolean;
-  content?: SnakeSlotContent;
+  slot_index: number;
+  user_id: string;
+  nickname: string;
+  profile_img?: string;
+  is_owner: boolean;
+  is_filled: boolean;
+  status: string;
+  text_message?: string;
+  images_ids?: SnakeMediaItem[];
+  audio_id?: SnakeMediaItem | null;
+  video_id?: SnakeMediaItem | null;
 }
 
 interface SnakeDetailResponse {
@@ -46,9 +45,9 @@ interface SnakeDetailResponse {
   stats?: { total_slots: number; filled_slots: number; empty_slots: number };
 }
 
-function toCamelSlotAuthor(s: SnakeSlotAuthor | null | undefined): CapsuleDetailSlotAuthor {
-  // author가 없으면 기본값 반환 (빈 슬롯)
-  if (!s) {
+function toCamelSlotAuthor(slot: SnakeSlot): CapsuleDetailSlotAuthor {
+  // is_filled가 false이거나 user_id가 없으면 빈 슬롯
+  if (!slot.is_filled || !slot.user_id) {
     return {
       id: '',
       name: '빈 슬롯',
@@ -56,48 +55,64 @@ function toCamelSlotAuthor(s: SnakeSlotAuthor | null | undefined): CapsuleDetail
     };
   }
   return {
-    id: s.id,
-    name: s.name,
-    emoji: s.emoji,
-    profileImg: s.profile_img,
+    id: slot.user_id,
+    name: slot.nickname || '익명',
+    emoji: '👤', // 기본 이모지 (서버에서 emoji를 주지 않으므로)
+    profileImg: slot.profile_img,
   };
 }
 
-function toCamelContent(c: SnakeSlotContent): SlotContent {
+function toCamelContent(slot: SnakeSlot): SlotContent | undefined {
+  // is_filled가 false이면 content가 없음
+  if (!slot.is_filled) {
+    return undefined;
+  }
+
   const content: SlotContent = {};
-  if (c.text != null) content.text = c.text;
-  if (c.images?.length) {
-    content.images = c.images.map(
+
+  // 텍스트 메시지
+  if (slot.text_message) {
+    content.text = slot.text_message;
+  }
+
+  // 이미지들 - media_id를 전달하면 플레이어가 자동으로 URL로 변환
+  if (slot.images_ids?.length) {
+    content.images = slot.images_ids.map(
       (img): SlotContentImage => ({
-        id: img.id,
-        url: img.url,
-        thumbnailUrl: img.thumbnail_url,
+        id: img.media_id,
+        url: img.media_id, // media_id를 그대로 전달
+        thumbnailUrl: img.media_id,
       })
     );
   }
-  if (c.video) {
+
+  // 비디오 - media_id를 전달하면 VideoPlayer가 자동으로 URL로 변환
+  if (slot.video_id && slot.video_id.media_id) {
     content.video = {
-      id: c.video.id,
-      url: c.video.url,
-      thumbnailUrl: c.video.thumbnail_url,
+      id: slot.video_id.media_id,
+      url: slot.video_id.media_id, // media_id를 그대로 전달
+      thumbnailUrl: slot.video_id.media_id,
     } as SlotContentVideo;
   }
-  if (c.audio) {
+
+  // 오디오 - media_id를 전달하면 AudioPlayer가 자동으로 URL로 변환
+  if (slot.audio_id && slot.audio_id.media_id) {
     content.audio = {
-      id: c.audio.id,
-      title: c.audio.title,
-      url: c.audio.url,
+      id: slot.audio_id.media_id,
+      title: slot.nickname ? `${slot.nickname}의 음성` : '음성 메시지',
+      url: slot.audio_id.media_id, // media_id를 그대로 전달
     } as SlotContentAudio;
   }
-  return content;
+
+  return Object.keys(content).length > 0 ? content : undefined;
 }
 
 function toCamelSlot(s: SnakeSlot): CapsuleDetailSlot {
   return {
     slotId: s.slot_id,
-    author: toCamelSlotAuthor(s.author),
-    isWritten: s.is_written,
-    content: s.content ? toCamelContent(s.content) : undefined,
+    author: toCamelSlotAuthor(s),
+    isWritten: s.is_filled, // is_written 대신 is_filled 사용
+    content: toCamelContent(s),
   };
 }
 

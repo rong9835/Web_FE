@@ -3,8 +3,8 @@
 import React from 'react';
 import { RiMapPinLine, RiCalendarLine, RiCalendarCheckLine } from '@remixicon/react';
 import { formatCapsuleDate } from '@/commons/utils/date';
-import type { OpenedCapsuleListProps } from '../types';
-import styles from './OpenedCapsuleList.module.css';
+import type { OpenedCapsuleListProps } from './types';
+import styles from './styles.module.css';
 
 export function OpenedCapsuleList({
   capsules,

@@ -4,8 +4,8 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { RiUserLine } from '@remixicon/react';
 import { formatRemainingTime } from '@/commons/utils/date';
-import type { WaitingRoomSectionProps } from '../types';
-import styles from './WaitingRoomSection.module.css';
+import type { WaitingRoomSectionProps } from './types';
+import styles from './styles.module.css';
 
 export function WaitingRoomSection({
   capsules,

@@ -2,8 +2,8 @@
 
 import React from 'react';
 import { RiCloseLine } from '@remixicon/react';
-import type { CapsuleHeaderProps } from '../types';
-import styles from './CapsuleHeader.module.css';
+import type { CapsuleHeaderProps } from './types';
+import styles from './styles.module.css';
 
 export function CapsuleHeader({
   openedCount,
