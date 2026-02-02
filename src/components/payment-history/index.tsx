@@ -9,101 +9,36 @@
  * - 영수증 상세보기 기능
  */
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React from 'react';
 import {
   RiArrowRightSLine,
   RiCloseLine,
   RiInboxLine,
   RiExternalLinkLine,
 } from '@remixicon/react';
-import { useMyPayments } from '@/commons/apis/payment/hooks/usePaymentHistory';
 import type { PaymentListItem } from '@/commons/apis/payment/types';
 import { formatCurrency } from '@/commons/utils/format';
+import { usePaymentHistoryPage } from './hooks';
+import { formatDate, getStatusText } from './utils';
 import styles from './styles.module.css';
 import type { PaymentHistoryProps } from './types';
-
-/**
- * 날짜 포맷팅 함수
- * ISO 8601 → "YYYY-MM-DD"
- */
-const formatDate = (isoString: string): string => {
-  const date = new Date(isoString);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-/**
- * 결제 상태 텍스트 변환
- */
-const getStatusText = (status: string): string => {
-  switch (status) {
-    case 'DONE':
-      return '완료';
-    case 'CANCELED':
-      return '취소됨';
-    default:
-      return status;
-  }
-};
 
 /**
  * PaymentHistory 컴포넌트
  */
 export function PaymentHistory({ className = '' }: PaymentHistoryProps) {
-  const router = useRouter();
-  const [selectedPayment, setSelectedPayment] = useState<PaymentListItem | null>(null);
-  const [isDetailVisible, setIsDetailVisible] = useState(false);
-
-  // API 호출
-  const { data, isLoading, error } = useMyPayments({
-    page: 1,
-    limit: 100,
-    status: 'ALL',
-  });
-
-  const allPayments = data?.payments || [];
-
-  // 헤더 닫기 핸들러
-  const handleClose = () => {
-    router.back();
-  };
-
-  // 카드 클릭 핸들러
-  const handleCardPress = (payment: PaymentListItem) => {
-    setSelectedPayment(payment);
-    setIsDetailVisible(true);
-  };
-
-  // 영수증 상세보기
-  const handleViewReceipt = (payment: PaymentListItem) => {
-    // 샌드박스 환경 체크
-    const isSandbox = payment.receiptUrl?.includes('sandbox');
-
-    if (isSandbox) {
-      // 샌드박스 환경에서는 영수증 URL이 제대로 작동하지 않을 수 있음
-      alert(
-        '⚠️ 테스트 환경 안내\n\n' +
-        '현재 샌드박스(테스트) 환경에서는 영수증 상세보기가 제한됩니다.\n\n' +
-        `결제 정보:\n` +
-        `• 주문번호: ${payment.orderNo}\n` +
-        `• 결제금액: ${formatCurrency(payment.amount)}\n` +
-        `• 결제수단: ${payment.method}\n` +
-        `• 결제일: ${formatDate(payment.approvedAt)}\n\n` +
-        '실제 프로덕션 환경에서는 정상적으로 영수증을 확인하실 수 있습니다.'
-      );
-      return;
-    }
-
-    // 프로덕션 환경에서는 영수증 URL 열기
-    if (payment.receiptUrl) {
-      window.open(payment.receiptUrl, '_blank', 'noopener,noreferrer');
-    } else {
-      alert('영수증 URL을 찾을 수 없습니다.');
-    }
-  };
+  const {
+    data,
+    allPayments,
+    isLoading,
+    error,
+    selectedPayment,
+    isDetailVisible,
+    handleClose,
+    handleCardPress,
+    handleCloseModal,
+    handleViewReceipt,
+  } = usePaymentHistoryPage();
 
   // 결제 카드 렌더링
   const renderPaymentCard = (item: PaymentListItem) => {
@@ -160,7 +95,7 @@ export function PaymentHistory({ className = '' }: PaymentHistoryProps) {
     return (
       <div
         className={styles.modalOverlay}
-        onClick={() => setIsDetailVisible(false)}
+        onClick={handleCloseModal}
       >
         <div
           className={styles.modalContent}
@@ -169,7 +104,7 @@ export function PaymentHistory({ className = '' }: PaymentHistoryProps) {
           {/* 닫기 버튼 */}
           <button
             className={styles.modalCloseButton}
-            onClick={() => setIsDetailVisible(false)}
+            onClick={handleCloseModal}
             type="button"
             aria-label="닫기"
           >

@@ -1,21 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React from 'react';
 import { CapsuleHeader } from './components/CapsuleHeader';
 import { WaitingRoomSection } from './components/WaitingRoomSection';
 import { CapsuleTabs } from './components/CapsuleTabs';
 import { OpenedCapsuleList } from './components/OpenedCapsuleList';
 import { LockedCapsuleList } from './components/LockedCapsuleList';
 import { CapsuleDetailModal } from './components/CapsuleDetailModal';
-import type { CapsuleTabType } from './types';
-import { useMyCapsules } from '@/commons/apis/me/capsules/hooks';
-import { useCapsuleDetail } from '@/commons/apis/timecapsules/hooks';
+import { useCapsuleStorage } from './hooks';
 import { Spinner } from '@/commons/components/spinner';
 import styles from './styles.module.css';
 
 export function CapsuleStorage() {
-  const router = useRouter();
   const {
     waitingRooms,
     openedCapsules,
@@ -23,37 +19,20 @@ export function CapsuleStorage() {
     isLoading,
     isError,
     refetch,
-  } = useMyCapsules();
-
-  const [activeTab, setActiveTab] = useState<CapsuleTabType>('opened');
-  const [selectedCapsuleId, setSelectedCapsuleId] = useState<string | null>(null);
-  const [selectedSlotIndex, setSelectedSlotIndex] = useState(0);
-
-  const {
-    data: detailData,
+    activeTab,
+    setActiveTab,
+    selectedCapsuleId,
+    selectedSlotIndex,
+    setSelectedSlotIndex,
+    detailData,
     writtenSlots,
-    isLoading: isDetailLoading,
-    error: detailError,
-  } = useCapsuleDetail(selectedCapsuleId);
-
-  const selectedSlot = writtenSlots[selectedSlotIndex];
-
-  // 에러 메시지 처리
-  const detailErrorMessage = detailError || (!isDetailLoading && detailData && !selectedSlot ? '작성된 내용이 없어요' : null);
-
-  const handleClose = () => {
-    router.back();
-  };
-
-  const handleOpenedCardClick = (capsuleId: string) => {
-    setSelectedCapsuleId(capsuleId);
-    setSelectedSlotIndex(0);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedCapsuleId(null);
-    setSelectedSlotIndex(0);
-  };
+    isDetailLoading,
+    detailErrorMessage,
+    handleClose,
+    handleOpenedCardClick,
+    handleCloseModal,
+    handleWaitingRoomCardClick,
+  } = useCapsuleStorage();
 
   if (isLoading) {
     return (
@@ -114,7 +93,7 @@ export function CapsuleStorage() {
       <div className={styles.scrollArea}>
         <WaitingRoomSection
           capsules={waitingRooms}
-          onCardClick={(id) => router.push(`/waiting-room/${id}`)}
+          onCardClick={handleWaitingRoomCardClick}
         />
         <CapsuleTabs
           activeTab={activeTab}

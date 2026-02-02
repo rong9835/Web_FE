@@ -4,7 +4,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { getCapsuleDetail } from '../detail';
-import type { CapsuleDetailSlot } from '@/commons/apis/me/capsules/types';
+import type { CapsuleDetailSlot } from '@/commons/apis/capsules/my-capsules/types';
 import { useAuthState } from '@/commons/hooks/useAuth';
 
 const STALE_TIME = 1000 * 60; // 1분

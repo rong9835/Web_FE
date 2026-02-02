@@ -5,10 +5,11 @@ import { RiCloseLine } from '@remixicon/react';
 import { Modal } from '@/commons/components/modal';
 import { AudioPlayer } from '@/commons/components/audio-player';
 import { VideoPlayer } from '@/commons/components/video-player';
-import type { CapsuleDetailModalProps } from '../types';
-import type { CapsuleDetailSlot } from '@/commons/apis/me/capsules/types';
+import { MediaImage } from '@/commons/components/media-image';
+import type { CapsuleDetailModalProps } from './types';
+import type { CapsuleDetailSlot } from '@/commons/apis/capsules/my-capsules/types';
 import { Spinner } from '@/commons/components/spinner';
-import styles from './CapsuleDetailModal.module.css';
+import styles from './styles.module.css';
 
 export function CapsuleDetailModal({
   visible,
@@ -24,6 +25,20 @@ export function CapsuleDetailModal({
   // slots는 이미 writtenSlots만 전달받음
   const selectedSlot: CapsuleDetailSlot | undefined = slots[selectedSlotIndex];
   const content = selectedSlot?.content;
+
+  // 디버깅: content 확인
+  useEffect(() => {
+    if (content && process.env.NODE_ENV === 'development') {
+      console.log('[CapsuleDetailModal] Content:', {
+        hasText: !!content.text,
+        hasImages: !!content.images?.length,
+        hasVideo: !!content.video,
+        hasAudio: !!content.audio,
+        videoData: content.video,
+        audioData: content.audio,
+      });
+    }
+  }, [content]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -90,9 +105,9 @@ export function CapsuleDetailModal({
               {content.images && content.images.length > 0 && (
                 <div className={styles.images}>
                   {content.images.map((img) => (
-                    <img
+                    <MediaImage
                       key={img.id}
-                      src={img.url}
+                      mediaId={img.url}
                       alt=""
                       className={styles.image}
                     />

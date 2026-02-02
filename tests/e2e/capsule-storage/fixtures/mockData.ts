@@ -2,8 +2,8 @@
  * 캡슐보관함 E2E/UI 테스트용 Mock 데이터
  */
 
-import type { MyCapsuleItem, CategorizedCapsules } from '@/commons/apis/me/capsules/types';
-import type { CapsuleDetailResponse } from '@/commons/apis/me/capsules/types';
+import type { MyCapsuleItem, CategorizedCapsules } from '@/commons/apis/capsules/my-capsules/types';
+import type { CapsuleDetailResponse } from '@/commons/apis/capsules/my-capsules/types';
 
 export const mockMyCapsuleItem: MyCapsuleItem = {
   id: 'mock-capsule-1',
