@@ -107,3 +107,65 @@ export function isAudioFile(file: File): boolean {
 export function isVideoFile(file: File): boolean {
   return file.type.startsWith('video/');
 }
+
+/**
+ * 이미지 압축 (Canvas API 사용)
+ * - 500KB 이하면 압축 생략
+ * - 최대 1920px 리사이즈 + JPEG 80% 품질
+ */
+export async function compressImage(file: File): Promise<File> {
+  const SKIP_THRESHOLD = 500 * 1024; // 500KB 이하는 스킵
+  const MAX_DIMENSION = 1920;
+  const QUALITY = 0.8;
+
+  if (file.size <= SKIP_THRESHOLD) return file;
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+
+      let { width, height } = img;
+      if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+        if (width >= height) {
+          height = Math.round((height * MAX_DIMENSION) / width);
+          width = MAX_DIMENSION;
+        } else {
+          width = Math.round((width * MAX_DIMENSION) / height);
+          height = MAX_DIMENSION;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob || blob.size >= file.size) {
+            resolve(file);
+            return;
+          }
+          resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+        },
+        'image/jpeg',
+        QUALITY
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      resolve(file); // 실패 시 원본 그대로
+    };
+
+    img.src = url;
+  });
+}

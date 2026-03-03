@@ -480,6 +480,31 @@
   width: 100%;
 }
 
+/* 자동제출 카운트다운 */
+.autoSubmitCountdown {
+  margin-top: var(--spacing-md);
+  text-align: center;
+  padding: 10px 0;
+}
+
+.autoSubmitNormal {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-grey-600);
+}
+
+.autoSubmitUrgent {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-red-500);
+}
+
+.autoSubmitExpired {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-grey-400);
+}
+
 /* 비활성화 사유 */
 .disabledReason {
   font-size: 12px;

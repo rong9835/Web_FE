@@ -44,7 +44,6 @@ const generateThumbnail = (videoUrl: string, seekTime?: number): Promise<string>
     video.preload = 'metadata';
     video.muted = true;
     video.playsInline = true;
-    video.crossOrigin = 'anonymous';
 
     let hasError = false;
     let timeoutId: NodeJS.Timeout | null = null;

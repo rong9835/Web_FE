@@ -109,11 +109,13 @@ export function AudioPreview({ audioUrl, onDelete }: AudioPreviewProps) {
       <audio
         ref={audioRef}
         src={audioUrl}
+        preload="none"
         onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
         onTimeUpdate={(e) => setCurrentTime(e.currentTarget.currentTime)}
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
         onEnded={() => setIsPlaying(false)}
+        onError={() => setIsPlaying(false)}
       />
     </div>
   );

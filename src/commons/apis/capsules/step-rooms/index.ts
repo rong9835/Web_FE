@@ -6,6 +6,7 @@
 import { apiClient } from '@/commons/provider/api-provider/api-client';
 import type { ApiError } from '@/commons/provider/api-provider/api-client';
 import { CAPSULE_ENDPOINTS } from '../../endpoints';
+import { compressImage } from '@/commons/utils/content';
 import type {
   MyContentSaveApiData,
   MyContentSaveResponse,
@@ -120,6 +121,9 @@ function transformWaitingRoomDetail(
     maxHeadcount: maxHeadcount ?? (slots.length || participants.length),
     participants,
     inviteCode: data.invite_code,
+    createdAt: data.created_at,
+    deadlineAt: data.deadline_at,
+    isAutoSubmitted: data.is_auto_submitted,
   };
 }
 
@@ -421,7 +425,11 @@ export async function saveContent(
   capsuleId: string,
   data: SaveContentRequest
 ): Promise<MyContentSaveResponse> {
-  const formData = createContentFormData(data);
+  const compressedData = {
+    ...data,
+    images: data.images ? await Promise.all(data.images.map(compressImage)) : data.images,
+  };
+  const formData = createContentFormData(compressedData);
   const response = await apiClient.post(
     CAPSULE_ENDPOINTS.MY_CONTENT(capsuleId),
     formData,
@@ -429,6 +437,7 @@ export async function saveContent(
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 120000, // 파일 업로드는 2분 타임아웃
     }
   );
   const saved = unwrapApiResponse<MyContentSaveApiData>(response.data);
@@ -465,7 +474,11 @@ export async function updateContent(
   capsuleId: string,
   data: UpdateContentRequest
 ): Promise<MyContentUpdateResponse> {
-  const formData = createContentFormData(data);
+  const compressedData = {
+    ...data,
+    images: data.images ? await Promise.all(data.images.map(compressImage)) : data.images,
+  };
+  const formData = createContentFormData(compressedData);
   // 문서 기준: PATCH로 부분 수정
   const response = await apiClient.patch(
     CAPSULE_ENDPOINTS.MY_CONTENT(capsuleId),
@@ -474,6 +487,7 @@ export async function updateContent(
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 120000, // 파일 업로드는 2분 타임아웃
     }
   );
   const updated = unwrapApiResponse<MyContentUpdateApiData>(response.data);

@@ -103,9 +103,16 @@ export function WaitingRoom({ capsuleId }: { capsuleId: string }) {
     (p) => p.hasContent === true
   ) ?? false;
 
-  const isTimerExpired = waitingRoom?.createdAt
-    ? new Date(waitingRoom.createdAt).getTime() + 24 * 60 * 60 * 1000 < now
-    : false;
+  // 자동제출 마감 시각 계산 (우선순위: deadlineAt → deadline → createdAt+24h)
+  const autoSubmitDeadline = waitingRoom?.deadlineAt
+    ? new Date(waitingRoom.deadlineAt).getTime()
+    : waitingRoom?.deadline
+      ? new Date(waitingRoom.deadline).getTime()
+      : waitingRoom?.createdAt
+        ? new Date(waitingRoom.createdAt).getTime() + 24 * 60 * 60 * 1000
+        : null;
+
+  const isTimerExpired = autoSubmitDeadline !== null ? autoSubmitDeadline < now : false;
 
   const canSubmit =
     isHost &&
@@ -127,7 +134,8 @@ export function WaitingRoom({ capsuleId }: { capsuleId: string }) {
   };
 
   const handleClose = () => {
-    router.back();
+    router.push('/profile/capsules');
+    router.refresh();
   };
 
   const handleInviteFriend = async () => {
@@ -215,8 +223,7 @@ export function WaitingRoom({ capsuleId }: { capsuleId: string }) {
 
   const handleNavigateToVault = () => {
     setIsAutoSubmitModalOpen(false);
-    // TODO: 보관함 페이지로 이동
-    router.push('/vault');
+    router.push('/profile/capsules');
   };
 
   const handleContentWriteClose = () => {
@@ -279,6 +286,28 @@ export function WaitingRoom({ capsuleId }: { capsuleId: string }) {
               onFinalSubmit={handleFinalSubmit}
             />
 
+            {/* 자동제출 카운트다운 */}
+            {autoSubmitDeadline !== null && waitingRoom.status !== 'BURIED' && (
+              <div className={styles.autoSubmitCountdown}>
+                {isTimerExpired ? (
+                  <span className={styles.autoSubmitExpired}>자동제출 완료</span>
+                ) : (() => {
+                  const remainingMs = autoSubmitDeadline - now;
+                  const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+                  const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+                  const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+                  const timeStr = hours > 0
+                    ? `${hours}시간 ${minutes}분 ${seconds}초`
+                    : `${minutes}분 ${seconds}초`;
+                  return (
+                    <span className={hours < 1 ? styles.autoSubmitUrgent : styles.autoSubmitNormal}>
+                      ⏰ {timeStr} 후 자동제출
+                    </span>
+                  );
+                })()}
+              </div>
+            )}
+
             {/* 제출 버튼 (방장에게만 표시) */}
             {isHost && waitingRoom?.status !== 'BURIED' && (
               <div className={styles.submitButtonContainer}>
@@ -309,13 +338,8 @@ export function WaitingRoom({ capsuleId }: { capsuleId: string }) {
           onConfirm={handleSubmitConfirm}
           openDate={waitingRoom.openDate}
           remainingHours={
-            waitingRoom.createdAt
-              ? Math.floor(
-                  (new Date(waitingRoom.createdAt).getTime() +
-                    24 * 60 * 60 * 1000 -
-                    now) /
-                    (1000 * 60 * 60)
-                )
+            autoSubmitDeadline !== null
+              ? Math.max(0, Math.floor((autoSubmitDeadline - now) / (1000 * 60 * 60)))
               : 0
           }
           isLoading={isSubmitting}
