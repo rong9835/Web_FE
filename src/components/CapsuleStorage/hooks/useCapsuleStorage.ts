@@ -44,7 +44,7 @@ export function useCapsuleStorage() {
    * 보관함 닫기
    */
   const handleClose = () => {
-    router.back();
+    router.push('/profile');
   };
 
   /**
